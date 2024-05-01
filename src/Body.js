@@ -1,59 +1,62 @@
-import { IcosahedronGeometry, Mesh, MeshStandardMaterial, Vector3 } from 'three'
+import {
+	BufferGeometry,
+	IcosahedronGeometry,
+	Line,
+	LineBasicMaterial,
+	Mesh,
+	MeshStandardMaterial,
+	Vector3,
+} from 'three'
 
-const geometry = new IcosahedronGeometry(1, 2)
-
-const G = 100
+const GEOM = new IcosahedronGeometry(1, 3)
+const G = 50
 const _V = new Vector3()
-
 export default class Body extends Mesh {
-	nexTicPosition = new Vector3()
-
-	constructor(
-		radius = 1,
-		mass = 10,
-		position = new Vector3().randomDirection().multiplyScalar(20),
-		velocity = new Vector3().randomDirection().multiplyScalar(2)
-	) {
+	constructor(r = 1, m = 1) {
+		const color = Math.random() * 0xffffff
 		const material = new MeshStandardMaterial({
-			color: Math.random() * 0xffffff,
+			color,
 		})
 
-		super(geometry, material)
+		super(GEOM, material)
 
-		this.radius = radius
-		this.scale.setScalar(radius)
-		this.mass = mass
-		this.position.copy(position)
-		this.nexTicPosition.copy(position)
-		this.velocity = velocity.clone()
+		this.color = color
+		this.radius = r
+		this.mass = m
+
+		this.position.randomDirection().multiplyScalar(20)
+		this.velocity = new Vector3()
 	}
 
-	attract(bodies, dt) {
-		const force = new Vector3()
+	attract(body, dt) {
+		const mass1 = this.mass
+		const mass2 = body.mass
+		const distance = Math.max(this.position.distanceTo(body.position), 1)
+		const dir = _V.copy(body.position).sub(this.position).normalize()
 
-		bodies.forEach((body) => {
-			if (body === this) return
-			const r = _V.copy(body.position).sub(this.position)
-			const sqDistance = r.lengthSq()
-			force.add(
-				r.normalize().multiplyScalar((G * (this.mass * body.mass)) / sqDistance)
-			)
-		})
+		const forceMagnitude = G * mass1 * mass2
+		const force = dir.multiplyScalar(forceMagnitude)
 
 		const a = force.multiplyScalar(1 / this.mass)
-		const v = a.multiplyScalar(dt)
-		this.velocity.add(v)
 
-		// if (this.velocity.length() > 20) {
-		// 	this.velocity.normalize().multiplyScalar(20)
-		// }
-
-		this.nexTicPosition = this.position
-			.clone()
-			.addScaledVector(this.velocity, dt)
+		this.velocity.addScaledVector(a, dt)
 	}
 
-	update() {
-		this.position.copy(this.nexTicPosition)
+	update(dt) {
+		const points = [this.position.clone()]
+
+		this.position.addScaledVector(this.velocity, dt)
+
+		// points.push(this.position.clone())
+
+		// const geometry = new BufferGeometry().setFromPoints(points)
+		// const material = new LineBasicMaterial({
+		// 	color: this.color,
+		// 	transparent: true,
+		// 	opacity: 0.5,
+		// })
+		// const line = new Line(geometry, material)
+
+		// this.parent.add(line)
 	}
 }

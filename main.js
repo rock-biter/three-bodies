@@ -19,52 +19,21 @@ scene.background = new THREE.Color(0x121223)
 /**
  * BOX
  */
-// const material = new THREE.MeshNormalMaterial()
-const material = new THREE.MeshStandardMaterial({ color: 'coral' })
-const geometry = new THREE.BoxGeometry(1, 1, 1)
+// // const material = new THREE.MeshNormalMaterial()
+// const material = new THREE.MeshStandardMaterial({ color: 'coral' })
+// const geometry = new THREE.BoxGeometry(1, 1, 1)
 
-const nOfBodies = 2
-const bodies = new Array(nOfBodies)
-
-bodies[0] = new Body(
-	1,
-	100,
-	new THREE.Vector3(20, 0, 0),
-	new THREE.Vector3(0, 10, 0)
-)
-bodies[1] = new Body(
-	1,
-	100,
-	new THREE.Vector3(-20, 0, 0),
-	new THREE.Vector3(0, -10, 0)
-)
-
-bodies[2] = new Body(
-	1,
-	100,
-	new THREE.Vector3(0, 0, -20),
-	new THREE.Vector3(0, 0, 0)
-)
-
-scene.add(...bodies)
-
-// for (let i = 0; i < nOfBodies; i++) {
-// 	bodies[i] = new Body(1, 1)
-// 	console.log(bodies[i])
-// 	scene.add(bodies[i])
-// }
-
-/**
- * Plane
- */
-const groundMaterial = new THREE.MeshStandardMaterial({ color: 'lightgray' })
-const groundGeometry = new THREE.PlaneGeometry(10, 10)
-groundGeometry.rotateX(-Math.PI * 0.5)
-const ground = new THREE.Mesh(groundGeometry, groundMaterial)
+// /**
+//  * Plane
+//  */
+// const groundMaterial = new THREE.MeshStandardMaterial({ color: 'lightgray' })
+// const groundGeometry = new THREE.PlaneGeometry(10, 10)
+// groundGeometry.rotateX(-Math.PI * 0.5)
+// const ground = new THREE.Mesh(groundGeometry, groundMaterial)
 // scene.add(ground)
 
-const mesh = new THREE.Mesh(geometry, material)
-mesh.position.y += 0.5
+// const mesh = new THREE.Mesh(geometry, material)
+// mesh.position.y += 0.5
 // scene.add(mesh)
 
 /**
@@ -79,8 +48,18 @@ const sizes = {
  */
 const fov = 60
 const camera = new THREE.PerspectiveCamera(fov, sizes.width / sizes.height, 0.1)
-camera.position.set(30, 30, 30)
+camera.position.set(24, 24, 24)
 camera.lookAt(new THREE.Vector3(0, 2.5, 0))
+
+const bodies = []
+const num = 10
+
+for (let i = 0; i < num; i++) {
+	const body = new Body()
+	bodies.push(body)
+}
+
+scene.add(...bodies)
 
 /**
  * Show the axes of coordinates system
@@ -103,7 +82,7 @@ handleResize()
  */
 const controls = new OrbitControls(camera, renderer.domElement)
 controls.enableDamping = true
-controls.autoRotate = true
+// controls.autoRotate = true
 
 /**
  * Lights
@@ -125,14 +104,37 @@ function tic() {
 	/**
 	 * tempo trascorso dal frame precedente
 	 */
-	const deltaTime = clock.getDelta()
+	const dt = clock.getDelta()
 	/**
 	 * tempo totale trascorso dall'inizio
 	 */
 	// const time = clock.getElapsedTime()
 
-	bodies.forEach((b) => b.attract(bodies, deltaTime))
-	bodies.forEach((b) => b.update())
+	for (let i = 0; i < bodies.length; i++) {
+		const bodyA = bodies[i]
+
+		for (let j = i; j < bodies.length; j++) {
+			const bodyB = bodies[j]
+
+			bodyA.attract(bodyB, dt)
+			bodyB.attract(bodyA, dt)
+		}
+
+		bodyA.update(dt)
+	}
+
+	// A.attract(B, dt)
+	// A.attract(C, dt)
+
+	// B.attract(A, dt)
+	// B.attract(C, dt)
+
+	// C.attract(A, dt)
+	// C.attract(B, dt)
+
+	// A.update(dt)
+	// B.update(dt)
+	// C.update(dt)
 
 	controls.update()
 
